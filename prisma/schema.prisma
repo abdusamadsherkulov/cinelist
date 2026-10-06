@@ -1,0 +1,185 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                String          @id @default(cuid())
+  name              String
+  email             String          @unique
+  passwordHash      String?
+  createdAt         DateTime        @default(now())
+  ratings           Rating[]
+  comments          Comment[]
+  notes             Note[]
+  folders           Folder[]
+  saved             SavedMovie[]
+  favorites         Favorite[]
+  watchlist         Watchlist[]
+  sentRequests      Friendship[]    @relation("Requester")
+  receivedRequests  Friendship[]    @relation("Addressee")
+  sentMessages      Message[]       @relation("Sender")
+  receivedMessages  Message[]       @relation("Receiver")
+  username          String?         @unique
+  savedVisible      Boolean         @default(true)
+  favoriteActors    FavoriteActor[]
+  notifications     Notification[]  @relation("NotifTo")
+  notificationsSent Notification[]  @relation("NotifFrom")
+}
+
+model Rating {
+  id                String          @id @default(cuid())
+  userId            String
+  movieId           Int
+  value             Int // 1-10
+  title             String?
+  posterPath        String?
+  year              String?
+  createdAt         DateTime        @default(now())
+  user              User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, movieId])
+  @@index([movieId])
+}
+
+model Comment {
+  id                String          @id @default(cuid())
+  userId            String
+  movieId           Int
+  body              String
+  createdAt         DateTime        @default(now())
+  user              User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([movieId, createdAt])
+}
+
+// Private per-user notes
+model Note {
+  id                String          @id @default(cuid())
+  userId            String
+  movieId           Int
+  body              String
+  updatedAt         DateTime        @updatedAt
+  user              User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, movieId])
+}
+
+model Folder {
+  id                String          @id @default(cuid())
+  userId            String
+  name              String
+  createdAt         DateTime        @default(now())
+  user              User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  movies            SavedMovie[]
+  isPublic          Boolean         @default(true)
+
+  @@unique([userId, name])
+}
+
+model SavedMovie {
+  id                String          @id @default(cuid())
+  userId            String
+  movieId           Int
+  title             String
+  posterPath        String?
+  year              String?
+  folderId          String?
+  createdAt         DateTime        @default(now())
+  user              User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  folder            Folder?         @relation(fields: [folderId], references: [id], onDelete: SetNull)
+
+  @@unique([userId, movieId])
+}
+
+model Favorite {
+  id                String          @id @default(cuid())
+  userId            String
+  movieId           Int
+  title             String
+  posterPath        String?
+  year              String?
+  createdAt         DateTime        @default(now())
+  user              User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, movieId])
+}
+
+model Watchlist {
+  id                String          @id @default(cuid())
+  userId            String
+  movieId           Int
+  title             String
+  posterPath        String?
+  year              String?
+  createdAt         DateTime        @default(now())
+  user              User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, movieId])
+}
+
+enum FriendStatus {
+  PENDING
+  ACCEPTED
+}
+
+model Friendship {
+  id                String          @id @default(cuid())
+  requesterId       String
+  addresseeId       String
+  status            FriendStatus    @default(PENDING)
+  createdAt         DateTime        @default(now())
+  requester         User            @relation("Requester", fields: [requesterId], references: [id], onDelete: Cascade)
+  addressee         User            @relation("Addressee", fields: [addresseeId], references: [id], onDelete: Cascade)
+
+  @@unique([requesterId, addresseeId])
+  @@index([addresseeId])
+}
+
+model Message {
+  id                String          @id @default(cuid())
+  senderId          String
+  receiverId        String
+  body              String          @default("")
+  movieId           Int?
+  movieTitle        String?
+  moviePoster       String?
+  movieYear         String?
+  createdAt         DateTime        @default(now())
+  readAt            DateTime?
+  sender            User            @relation("Sender", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver          User            @relation("Receiver", fields: [receiverId], references: [id], onDelete: Cascade)
+
+  @@index([senderId, receiverId, createdAt])
+  @@index([receiverId, readAt])
+}
+
+model FavoriteActor {
+  id                String          @id @default(cuid())
+  userId            String
+  personId          Int
+  name              String
+  profilePath       String?
+  department        String?
+  createdAt         DateTime        @default(now())
+  user              User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, personId])
+}
+
+model Notification {
+  id                String          @id @default(cuid())
+  userId            String
+  actorId           String
+  type              String // "friend_request" | "friend_accepted"
+  readAt            DateTime?
+  createdAt         DateTime        @default(now())
+  user              User            @relation("NotifTo", fields: [userId], references: [id], onDelete: Cascade)
+  actor             User            @relation("NotifFrom", fields: [actorId], references: [id], onDelete: Cascade)
+
+  @@index([userId, readAt, createdAt])
+}
