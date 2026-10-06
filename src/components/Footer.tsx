@@ -61,7 +61,10 @@ export default async function Footer() {
 
             <div className="border-t border-line">
                 <div className="mx-auto grid max-w-7xl gap-2 px-4 py-5 text-xs text-zinc-500 sm:grid-cols-[1fr_auto_1.6fr] sm:items-center sm:gap-6 sm:px-6">
-                    <p>© {new Date().getFullYear()} CineList. Made for movie lovers.</p>
+                    <p>
+                        © {new Date().getFullYear()} CineList. Made for movie lovers. ·{" "}
+                        <Link href="/privacy" className="text-zinc-300 hover:text-accent">Privacy policy</Link>
+                    </p>
                     <p className="sm:text-center">
                         Built by{" "}
                         <a href="https://sam-sherkulov-portfolio.vercel.app/" target="_blank" rel="noreferrer" className="text-zinc-300 hover:text-accent">
