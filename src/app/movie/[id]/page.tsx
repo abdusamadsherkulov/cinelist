@@ -10,6 +10,7 @@ import TrailerButton from "@/components/TrailerButton";
 import PosterZoom from "@/components/PosterZoom";
 import CastList from "@/components/CastList";
 import { getFriends } from "@/lib/social";
+import Link from "next/link";
 
 export default async function MoviePage({ params }: { params: Promise<{ id: string }> }) {
   const movieId = Number((await params).id);
@@ -67,7 +68,13 @@ export default async function MoviePage({ params }: { params: Promise<{ id: stri
           {m.tagline && <p className="mt-1 italic text-zinc-400">{m.tagline}</p>}
           <div className="mt-3 flex flex-wrap items-center gap-2 text-sm">
             {m.genres.map((g) => (
-              <span key={g.id} className="rounded-full border border-line px-3 py-0.5 text-zinc-300">{g.name}</span>
+              <Link
+                key={g.id}
+                href={`/discover?genre=${g.id}`}
+                className="rounded-full border border-line px-3 py-0.5 text-zinc-300 transition hover:border-accent hover:text-accent"
+              >
+                {g.name}
+              </Link>
             ))}
             {m.runtime ? <span className="text-zinc-500">{Math.floor(m.runtime / 60)}h {m.runtime % 60}m</span> : null}
           </div>
